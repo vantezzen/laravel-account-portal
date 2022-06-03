@@ -8,12 +8,16 @@ use Vantezzen\LaravelAccountPortal\LaravelAccountPortalServiceProvider;
 
 class TestCase extends Orchestra
 {
+    public function getEnvironmentSetUp($app)
+    {
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'Vantezzen\\LaravelAccountPortal\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName) => 'Vantezzen\\LaravelAccountPortal\\Database\\Factories\\' . class_basename($modelName) . 'Factory'
         );
     }
 
@@ -22,15 +26,5 @@ class TestCase extends Orchestra
         return [
             LaravelAccountPortalServiceProvider::class,
         ];
-    }
-
-    public function getEnvironmentSetUp($app)
-    {
-        config()->set('database.default', 'testing');
-
-        /*
-        $migration = include __DIR__.'/../database/migrations/create_laravel-account-portal_table.php.stub';
-        $migration->up();
-        */
     }
 }

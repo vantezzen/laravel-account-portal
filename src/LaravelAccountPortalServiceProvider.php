@@ -4,7 +4,6 @@ namespace Vantezzen\LaravelAccountPortal;
 
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Vantezzen\LaravelAccountPortal\Commands\LaravelAccountPortalCommand;
 
 class LaravelAccountPortalServiceProvider extends PackageServiceProvider
 {
@@ -18,8 +17,6 @@ class LaravelAccountPortalServiceProvider extends PackageServiceProvider
         $package
             ->name('laravel-account-portal')
             ->hasConfigFile()
-            ->hasViews()
-            ->hasMigration('create_laravel-account-portal_table')
-            ->hasCommand(LaravelAccountPortalCommand::class);
+            ->hasViews();
     }
 }
