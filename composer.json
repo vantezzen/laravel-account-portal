@@ -1,17 +1,17 @@
 {
-    "name": ":vendor_slug/:package_slug",
-    "description": ":package_description",
+    "name": "vantezzen/laravel-account-portal",
+    "description": "Quickly switch into user accounts of your Laravel app",
     "keywords": [
-        ":vendor_name",
+        "vantezzen",
         "laravel",
-        ":package_slug"
+        "laravel-account-portal"
     ],
-    "homepage": "https://github.com/:vendor_slug/:package_slug",
+    "homepage": "https://github.com/vantezzen/laravel-account-portal",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "Bennett",
+            "email": "hello@vantezzen.io",
             "role": "Developer"
         }
     ],
@@ -35,13 +35,13 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src",
-            "VendorName\\Skeleton\\Database\\Factories\\": "database/factories"
+            "Vantezzen\\LaravelAccountPortal\\": "src",
+            "Vantezzen\\LaravelAccountPortal\\Database\\Factories\\": "database/factories"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests"
+            "Vantezzen\\LaravelAccountPortal\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -56,10 +56,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
+                "Vantezzen\\LaravelAccountPortal\\LaravelAccountPortalServiceProvider"
             ],
             "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\Facades\\Skeleton"
+                "LaravelAccountPortal": "Vantezzen\\LaravelAccountPortal\\Facades\\LaravelAccountPortal"
             }
         }
     },
