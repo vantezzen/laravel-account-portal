@@ -37,7 +37,7 @@ class LaravelAccountPortal
 
     private function switchIntoPortal(Session $session, Authenticatable $currentUser, Authenticatable $userForPortal): void
     {
-        $session->put($this->getSessionKey(), $currentUser->id);
+        $session->put($this->getSessionKey(), $currentUser->getAuthIdentifier());
         $this->logIntoUser($userForPortal);
     }
 
@@ -58,17 +58,21 @@ class LaravelAccountPortal
     /**
      * Close an open portal to go back to the original user account
      *
+     * Usage:
+     * $portal->closePortal($request->session(), fn($id) => User::find($id));
+     *
      * @param Session $session Session that the portal information is saved in
+     * @param callable $getUserFromId Function that returns an authenticatable user when given a user ID
      * @return void
      * @throws NotInAccountPortalException Thrown if trying to close a portal that isn't open
      */
-    public function closePortal(Session $session)
+    public function closePortal(Session $session, callable $getUserFromId): void
     {
         if (! $this->isInPortal($session)) {
             throw new NotInAccountPortalException();
         }
 
-        $this->switchOutOfPortal($session);
+        $this->switchOutOfPortal($session, $getUserFromId);
     }
 
     /**
@@ -82,15 +86,15 @@ class LaravelAccountPortal
         return $session->has($this->getSessionKey());
     }
 
-    private function switchOutOfPortal(Session $session): void
+    private function switchOutOfPortal(Session $session, callable $getUserFromId): void
     {
-        $originalUser = $this->getOriginalUserFromSession($session);
+        $originalUser = $this->getOriginalUserFromSession($session, $getUserFromId);
         $this->logIntoUser($originalUser);
         $session->forget($this->getSessionKey());
     }
 
-    private function getOriginalUserFromSession(Session $session): Authenticatable
+    private function getOriginalUserFromSession(Session $session, callable $getUserFromId): Authenticatable
     {
-        return User::find($session->get($this->getSessionKey()));
+        return $getUserFromId($session->get($this->getSessionKey()));
     }
 }
