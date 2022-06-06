@@ -4,7 +4,9 @@
     "keywords": [
         "vantezzen",
         "laravel",
-        "laravel-account-portal"
+        "laravel-account-portal",
+        "account",
+        "admin"
     ],
     "homepage": "https://github.com/vantezzen/laravel-account-portal",
     "license": "MIT",
