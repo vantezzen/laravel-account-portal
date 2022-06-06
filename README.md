@@ -100,10 +100,17 @@ class MyController extends Controller {
         $laravelAccountPortal->closePortal(
             // Current session object used to store the portal information
             $request->session(),
+            
+            // Get the authenticatable model instance by id
+            fn($id) => User::find($id)
         );
     }
 }
 ```
+
+The second argument should be a `callable` that returns the model of a user by its ID. Internally, this package only
+stores the ID of the original user that opened the portal to get back to the account once the portal is closed.
+To stay unopinionated about your user modelling, you need to provide this callback to lookup the model by this saved ID.
 
 Please note that this will throw a "NotInAccountPortalException" if the session doesn't currently have an active portal.
 
