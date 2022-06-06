@@ -34,12 +34,14 @@ unauthorized use.
 For example, you might add such a Gate definition to your AppServiceProvider:
 
 ```PHP
-Gate::define("use-account-portal", function (User $currentUser, User $portalUser) {
+Gate::define("use-account-portal", function (User $currentUser, ?User $portalUser = null) {
     return $currentUser->isAdmin();
 });
 ```
 
-Your gate should determine, if the user `$currentUser` is authorized to open a portal into the account of `$portalUser`.
+Your gate should determine, if the user `$currentUser` is authorized to open a portal into the account of `$portalUser`
+though please note that `$portalUser` might be `null` if checking that the current user is allowed to use the feature at
+all.
 
 ## Usage
 
@@ -113,9 +115,20 @@ To check the current status of the portal, you can use the helper methods `isInP
 // True if the session has information about being in a portal
 $isInPortal = $laravelAccountPortal->isInPortal($request->session());
 
-// Simply a wrapper around your defined Gate
-$canUsePortal = $laravelAccountPortal->canUsePortal($portalUser);
+// True if a portal can be opened into the portal user
+// Please note that "$portalUser" might be left as null to check generally
+$canUsePortal = $laravelAccountPortal->canUsePortal($request->session(), $portalUser);
 ```
+
+Based on these parameters, you might choose to display an "Open account portal", "Close account portal" button or no
+button in your frontend.
+
+### Multi-level portal
+
+Please note that due to security and complexity reasons, users cannot open a portal while already in a portal.
+
+If a user is currently in a portal, `canUsePortal` will always return `false`, making it impossible to open further
+portals.
 
 ## Testing
 

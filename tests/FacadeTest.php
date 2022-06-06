@@ -30,18 +30,33 @@ it('can tell that a user is in a portal', function () {
 it('can use the gate to find out that a user can use a portal', function () {
     $mockUser = Mockery::mock(Authenticatable::class);
     $mockUser->email = "test@allowed.com";
+    $mockSession = Mockery::mock(Store::class);
+    $mockSession->shouldReceive('has')->andReturn(false);
 
     $service = new LaravelAccountPortal();
-    $canUsePortal = $service->canUsePortal($mockUser);
+    $canUsePortal = $service->canUsePortal($mockSession, $mockUser);
     expect($canUsePortal)->toBeTrue();
 });
 
 it('can use the gate to find out that a user cannot use a portal', function () {
     $mockUser = Mockery::mock(Authenticatable::class);
     $mockUser->email = "test@denied.com";
+    $mockSession = Mockery::mock(Store::class);
+    $mockSession->shouldReceive('has')->andReturn(false);
 
     $service = new LaravelAccountPortal();
-    $canUsePortal = $service->canUsePortal($mockUser);
+    $canUsePortal = $service->canUsePortal($mockSession, $mockUser);
+    expect($canUsePortal)->toBeFalse();
+});
+
+it('can indicate that multi-level portal is not possible', function () {
+    $mockUser = Mockery::mock(Authenticatable::class);
+    $mockUser->email = "test@allowed.com";
+    $mockSession = Mockery::mock(Store::class);
+    $mockSession->shouldReceive('has')->andReturn(true);
+
+    $service = new LaravelAccountPortal();
+    $canUsePortal = $service->canUsePortal($mockSession, $mockUser);
     expect($canUsePortal)->toBeFalse();
 });
 
@@ -63,6 +78,7 @@ it('can open a portal', function () {
     $mockPortalUser = getMockUser("portal@allowed.com");
 
     $mockSession = Mockery::mock(Store::class);
+    $mockSession->shouldReceive('has')->andReturn(false);
     $mockSession->shouldReceive('put');
 
     $service = new LaravelAccountPortal();
@@ -75,6 +91,24 @@ it('throws if trying to open a portal for a user that isnt allowed to', function
     $mockPortalUser = getMockUser("portal@denied.com");
 
     $mockSession = Mockery::mock(Store::class);
+    $mockSession->shouldReceive('has')->andReturn(false);
+
+    $service = new LaravelAccountPortal();
+
+    try {
+        $service->openPortal($mockSession, $mockUser, $mockPortalUser);
+        expect(false)->toBeTrue();
+    } catch (AccountPortalNotAllowedForUserException $e) {
+    }
+    expect(Auth::user())->toBeNull();
+});
+
+it('throws if trying to open a portal while already in a portal', function () {
+    $mockUser = getMockUser("test@allowed.com");
+    $mockPortalUser = getMockUser("portal@allowed.com");
+
+    $mockSession = Mockery::mock(Store::class);
+    $mockSession->shouldReceive('has')->andReturn(true);
 
     $service = new LaravelAccountPortal();
 

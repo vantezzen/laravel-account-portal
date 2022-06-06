@@ -23,15 +23,19 @@ class LaravelAccountPortal
      */
     public function openPortal(Session $session, Authenticatable $currentUser, Authenticatable $userForPortal): void
     {
-        if (! $this->canUsePortal($userForPortal)) {
+        if (! $this->canUsePortal($session, $userForPortal)) {
             throw new AccountPortalNotAllowedForUserException();
         }
 
         $this->switchIntoPortal($session, $currentUser, $userForPortal);
     }
 
-    public function canUsePortal(Authenticatable $user): bool
+    public function canUsePortal(Session $session, ?Authenticatable $user = null): bool
     {
+        if ($session->has($this->getSessionKey())) {
+            return false;
+        }
+
         return Gate::allows("use-account-portal", $user);
     }
 
