@@ -2,55 +2,46 @@
 
 namespace Vantezzen\LaravelAccountPortal;
 
-use Illuminate\Config\Repository;
 use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Vantezzen\LaravelAccountPortal\Exceptions\AccountPortalNotAllowedForUserException;
 use Vantezzen\LaravelAccountPortal\Exceptions\NotInAccountPortalException;
+use Vantezzen\LaravelAccountPortal\PortalStorage\PortalStorage;
 
 class LaravelAccountPortal
 {
     /**
      * Open an account portal
      *
-     * @param Session $session Session storage that can be used for saving portal information
+     * @param PortalStorage $storage Storage to use
      * @param Authenticatable $currentUser Currently authenticated user that wants to open the portal
      * @param Authenticatable $userForPortal User that should be portaled into
      * @throws AccountPortalNotAllowedForUserException Thrown if the current user is not allowed to open the portal
      */
-    public function openPortal(Session $session, Authenticatable $currentUser, Authenticatable $userForPortal): void
+    public function openPortal(PortalStorage $storage, Authenticatable $currentUser, Authenticatable $userForPortal): void
     {
-        if (! $this->canUsePortal($session, $userForPortal)) {
+        if (! $this->canUsePortal($storage, $userForPortal)) {
             throw new AccountPortalNotAllowedForUserException();
         }
 
-        $this->switchIntoPortal($session, $currentUser, $userForPortal);
+        $this->switchIntoPortal($storage, $currentUser, $userForPortal);
     }
 
-    public function canUsePortal(Session $session, ?Authenticatable $user = null): bool
+    public function canUsePortal(PortalStorage $storage, ?Authenticatable $user = null): bool
     {
-        if ($session->has($this->getSessionKey())) {
+        if ($storage->hasPortalInformation()) {
             return false;
         }
 
         return Gate::allows("use-account-portal", $user);
     }
 
-    private function switchIntoPortal(Session $session, Authenticatable $currentUser, Authenticatable $userForPortal): void
+    private function switchIntoPortal(PortalStorage $storage, Authenticatable $currentUser, Authenticatable $userForPortal): void
     {
-        $session->put($this->getSessionKey(), $currentUser->getAuthIdentifier());
+        $storage->storePortalInformation($currentUser->getAuthIdentifier());
         $this->logIntoUser($userForPortal);
-    }
-
-    /**
-     * @return Repository|Application|mixed
-     */
-    public function getSessionKey(): mixed
-    {
-        return config('account-portal.session_key');
     }
 
     private function logIntoUser(Authenticatable $user): void
@@ -65,18 +56,18 @@ class LaravelAccountPortal
      * Usage:
      * $portal->closePortal($request->session(), fn($id) => User::find($id));
      *
-     * @param Session $session Session that the portal information is saved in
+     * @param PortalStorage $storage Storage to use
      * @param callable $getUserFromId Function that returns an authenticatable user when given a user ID
      * @return void
      * @throws NotInAccountPortalException Thrown if trying to close a portal that isn't open
      */
-    public function closePortal(Session $session, callable $getUserFromId): void
+    public function closePortal(PortalStorage $storage, callable $getUserFromId): void
     {
-        if (! $this->isInPortal($session)) {
+        if (! $this->isInPortal($storage)) {
             throw new NotInAccountPortalException();
         }
 
-        $this->switchOutOfPortal($session, $getUserFromId);
+        $this->switchOutOfPortal($storage, $getUserFromId);
     }
 
     /**
@@ -85,20 +76,19 @@ class LaravelAccountPortal
      * @param Session $session Session to check
      * @return bool
      */
-    public function isInPortal(Session $session): bool
+    public function isInPortal(PortalStorage $storage): bool
     {
-        return $session->has($this->getSessionKey());
+        return $storage->hasPortalInformation();
     }
 
-    private function switchOutOfPortal(Session $session, callable $getUserFromId): void
+    private function switchOutOfPortal(PortalStorage $storage, callable $getUserFromId): void
     {
-        $originalUser = $this->getOriginalUserFromSession($session, $getUserFromId);
+        $originalUser = $this->getOriginalUserFromSession($storage, $getUserFromId);
         $this->logIntoUser($originalUser);
-        $session->forget($this->getSessionKey());
     }
 
-    private function getOriginalUserFromSession(Session $session, callable $getUserFromId): Authenticatable
+    private function getOriginalUserFromSession(PortalStorage $storage, callable $getUserFromId): Authenticatable
     {
-        return $getUserFromId($session->get($this->getSessionKey()));
+        return $getUserFromId($storage->getAndForgetPortalInformation());
     }
 }
